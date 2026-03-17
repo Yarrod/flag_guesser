@@ -1,0 +1,61 @@
+:root {
+  --font-main: 'Trebuchet MS', 'Segoe UI', sans-serif;
+
+  --bg-gradient: radial-gradient(circle at 20% 0%, #fff1ce 0%, #ffdba7 35%, #ffc7c7 100%);
+  --card-bg: #ffffffe8;
+  --card-bg-soft: #fff9ef;
+  --text-main: #10243d;
+  --text-muted: #334b66;
+  --border-main: #10243d;
+  --accent: #1f6feb;
+  --accent-hover: #1453b0;
+  --positive: #188038;
+  --positive-soft: #79dd97;
+  --danger: #b42318;
+  --danger-soft: #f8a4a4;
+  --surface: #f8efe0;
+}
+
+:root[data-theme='dark'] {
+  --bg-gradient: radial-gradient(circle at 20% 0%, #1e2638 0%, #101827 45%, #0a0f1c 100%);
+  --card-bg: #111827f2;
+  --card-bg-soft: #1f2937;
+  --text-main: #e8eefb;
+  --text-muted: #a7b4ce;
+  --border-main: #d7e3ff;
+  --accent: #5fa4ff;
+  --accent-hover: #3f8ef8;
+  --positive: #2dcf73;
+  --positive-soft: #1d6f43;
+  --danger: #ff7373;
+  --danger-soft: #6f2630;
+  --surface: #0f172a;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  width: 100%;
+  min-height: 100%;
+}
+
+body {
+  min-height: 100vh;
+  font-family: var(--font-main);
+  line-height: 1.2;
+  font-weight: 700;
+  color: var(--text-main);
+  background: var(--bg-gradient);
+  touch-action: manipulation;
+  transition: background 220ms ease;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+}

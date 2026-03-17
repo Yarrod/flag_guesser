@@ -1,0 +1,23 @@
+{
+  "name": "Flag Guesser Dev",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "forwardPorts": [5173],
+  "portsAttributes": {
+    "5173": {
+      "label": "Vite dev server",
+      "onAutoForward": "notify"
+    }
+  },
+  "postCreateCommand": "npm install",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "ms-vscode.vscode-typescript-next"
+      ]
+    }
+  }
+}

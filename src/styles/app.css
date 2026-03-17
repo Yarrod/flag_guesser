@@ -1,0 +1,312 @@
+.menu-shell {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+}
+
+.menu-card {
+  width: min(760px, 100%);
+  background: var(--card-bg);
+  border: 2px solid color-mix(in srgb, var(--border-main) 72%, transparent);
+  border-radius: 1.25rem;
+  padding: 1.2rem;
+  display: grid;
+  gap: 0.85rem;
+  box-shadow: 0 24px 36px rgba(0, 0, 0, 0.18);
+  backdrop-filter: blur(4px);
+}
+
+.menu-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+}
+
+.menu-card h1 {
+  margin: 0;
+  font-size: clamp(1.9rem, 3.2vw, 2.8rem);
+}
+
+.menu-label {
+  margin: 0.2rem 0 0;
+  color: var(--text-muted);
+  font-size: clamp(0.95rem, 1.5vw, 1.1rem);
+}
+
+.menu-language-options,
+.menu-grid-options {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.menu-language-options {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.menu-grid-options {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.menu-option,
+.toggle-button,
+.menu-back-button {
+  border: 2px solid color-mix(in srgb, var(--border-main) 75%, transparent);
+  border-radius: 0.9rem;
+  background: var(--card-bg-soft);
+  color: var(--text-main);
+  min-height: 3rem;
+  font-size: clamp(0.95rem, 1.45vw, 1.08rem);
+  cursor: pointer;
+  transition: transform 120ms ease, background-color 120ms ease;
+}
+
+.menu-option:hover,
+.toggle-button:hover,
+.menu-back-button:hover {
+  transform: translateY(-1px);
+}
+
+.menu-option.is-active {
+  background: color-mix(in srgb, var(--accent) 24%, var(--card-bg-soft));
+}
+
+.toggle-button,
+.menu-back-button {
+  padding: 0.42rem 0.8rem;
+  min-height: 2.35rem;
+  width: fit-content;
+}
+
+.menu-option:focus-visible,
+.toggle-button:focus-visible,
+.menu-back-button:focus-visible,
+.replay-button:focus-visible {
+  outline: 4px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.game-shell {
+  min-height: 100vh;
+  width: min(1220px, 100%);
+  margin: 0 auto;
+  padding: 1rem 1rem 1.25rem;
+  display: grid;
+  grid-template-rows: auto auto auto 1fr;
+  gap: 0.8rem;
+}
+
+.top-bar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.8rem;
+}
+
+.top-left {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.top-left h1 {
+  margin: 0;
+  font-size: clamp(1.6rem, 2.8vw, 2.35rem);
+}
+
+.header-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.score-board {
+  display: flex;
+  gap: 0.55rem;
+}
+
+.score-item {
+  background: var(--card-bg);
+  border: 2px solid color-mix(in srgb, var(--border-main) 72%, transparent);
+  border-radius: 0.75rem;
+  padding: 0.4rem 0.8rem;
+  font-size: clamp(0.95rem, 1.6vw, 1.15rem);
+}
+
+.controls {
+  display: flex;
+  justify-content: center;
+}
+
+.replay-button {
+  border: 0;
+  border-radius: 999px;
+  background: var(--positive);
+  color: #fff;
+  padding: 0.75rem 1.5rem;
+  min-height: 3rem;
+  min-width: 12rem;
+  font-size: clamp(0.96rem, 1.7vw, 1.2rem);
+  cursor: pointer;
+}
+
+.replay-button:hover {
+  filter: brightness(1.05);
+}
+
+.feedback {
+  min-height: 2.2rem;
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 0.15rem;
+}
+
+.feedback p {
+  margin: 0;
+  font-size: clamp(1.1rem, 1.8vw, 1.55rem);
+  text-align: center;
+}
+
+.feedback-good {
+  color: var(--positive);
+}
+
+.feedback-bad {
+  color: var(--danger);
+  font-weight: 800;
+}
+
+.feedback-answer {
+  color: color-mix(in srgb, var(--text-main) 86%, var(--positive) 14%);
+  font-size: clamp(1rem, 1.55vw, 1.3rem);
+}
+
+.choices-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--grid-columns, 3), minmax(0, 1fr));
+  gap: 0.9rem;
+  align-items: stretch;
+}
+
+.flag-card {
+  position: relative;
+  border: 3px solid color-mix(in srgb, var(--border-main) 72%, transparent);
+  border-radius: 1rem;
+  background: var(--card-bg);
+  padding: 0.45rem;
+  min-height: min(34vh, 280px);
+  cursor: pointer;
+  transition: transform 130ms ease, border-color 130ms ease, opacity 120ms ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flag-card:hover {
+  transform: translateY(-2px);
+}
+
+.flag-card:disabled {
+  cursor: default;
+}
+
+.flag-card.is-dimmed {
+  opacity: 0.45;
+  filter: saturate(0.4);
+}
+
+.flag-card.is-focused {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 40%, transparent);
+}
+
+.flag-card.is-correct {
+  border-color: var(--positive);
+  box-shadow: 0 0 0 6px color-mix(in srgb, var(--positive-soft) 72%, transparent);
+  transform: scale(1.015);
+}
+
+.flag-card.is-wrong {
+  border-color: var(--danger);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--danger-soft) 75%, transparent);
+}
+
+.flag-badge {
+  position: absolute;
+  top: 0.55rem;
+  left: 0.55rem;
+  z-index: 2;
+  background: color-mix(in srgb, var(--border-main) 85%, transparent);
+  color: var(--card-bg-soft);
+  border-radius: 999px;
+  padding: 0.23rem 0.62rem;
+  font-size: clamp(0.72rem, 1vw, 0.84rem);
+}
+
+.flag-card.is-correct .flag-badge {
+  background: var(--positive);
+  color: #fff;
+}
+
+.flag-card.is-wrong .flag-badge {
+  background: var(--danger);
+  color: #fff;
+}
+
+.flag-frame {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border-radius: 0.7rem;
+  background: var(--surface);
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+}
+
+.flag-image,
+.flag-fallback {
+  width: 100%;
+  height: 100%;
+}
+
+.flag-image {
+  object-fit: contain;
+  object-position: center;
+  user-select: none;
+  padding: 0.26rem;
+}
+
+.flag-fallback {
+  display: grid;
+  place-items: center;
+  background: repeating-linear-gradient(
+    45deg,
+    color-mix(in srgb, var(--surface) 80%, #f7d8b8) 0,
+    color-mix(in srgb, var(--surface) 80%, #f7d8b8) 14px,
+    color-mix(in srgb, var(--surface) 60%, #f2bfbf) 14px,
+    color-mix(in srgb, var(--surface) 60%, #f2bfbf) 28px
+  );
+  color: var(--text-muted);
+  font-size: clamp(1.4rem, 2.8vw, 2.4rem);
+}
+
+@media (max-width: 900px) {
+  .game-shell {
+    padding: 0.8rem;
+  }
+
+  .menu-language-options,
+  .menu-grid-options,
+  .choices-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .flag-card {
+    min-height: 23vh;
+  }
+
+  .top-bar {
+    flex-direction: column;
+  }
+}
