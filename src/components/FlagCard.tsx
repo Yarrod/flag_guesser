@@ -46,7 +46,7 @@ export function FlagCard({
       ]
         .filter(Boolean)
         .join(' ')}
-      onPointerUp={() => {
+      onClick={() => {
         if (!isLocked) {
           onSelect();
         }
