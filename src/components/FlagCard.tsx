@@ -47,6 +47,12 @@ export function FlagCard({
         .filter(Boolean)
         .join(' ')}
       onClick={onSelect}
+      onTouchEnd={(event) => {
+        event.preventDefault();
+        if (!isLocked) {
+          onSelect();
+        }
+      }}
       disabled={isLocked}
       aria-label={displayName}
       aria-pressed={isFocused}
