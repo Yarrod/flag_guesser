@@ -11,6 +11,7 @@ function createAudio(src: string): HTMLAudioElement {
 
 export function useAudioManager(sources: string[]) {
   const audioMapRef = useRef<AudioMap>(new Map());
+  const isUnlockedRef = useRef(false);
 
   useEffect(() => {
     const uniqueSources = [...new Set(sources)];
@@ -94,5 +95,30 @@ export function useAudioManager(sources: string[]) {
     [getAudio]
   );
 
-  return { play, playAndWait };
+  const unlockAll = useCallback(async () => {
+    if (isUnlockedRef.current) {
+      return;
+    }
+    isUnlockedRef.current = true;
+
+    const audios = [...audioMapRef.current.values()];
+    await Promise.all(
+      audios.map(async (audio) => {
+        const originalMuted = audio.muted;
+        try {
+          audio.muted = true;
+          audio.currentTime = 0;
+          await audio.play();
+          audio.pause();
+          audio.currentTime = 0;
+        } catch {
+          // If this fails, normal playback may still work for some clips.
+        } finally {
+          audio.muted = originalMuted;
+        }
+      })
+    );
+  }, []);
+
+  return { play, playAndWait, unlockAll };
 }

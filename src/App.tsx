@@ -131,13 +131,35 @@ export default function App() {
     ],
     []
   );
-  const { play, playAndWait } = useAudioManager(allAudioSources);
+  const { play, playAndWait, unlockAll } = useAudioManager(allAudioSources);
 
   const t = TRANSLATIONS[language];
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
   }, [theme]);
+
+  useEffect(() => {
+    let didUnlock = false;
+
+    const onFirstInteraction = () => {
+      if (didUnlock) {
+        return;
+      }
+      didUnlock = true;
+      void unlockAll();
+    };
+
+    window.addEventListener('pointerdown', onFirstInteraction, { passive: true });
+    window.addEventListener('touchstart', onFirstInteraction, { passive: true });
+    window.addEventListener('keydown', onFirstInteraction);
+
+    return () => {
+      window.removeEventListener('pointerdown', onFirstInteraction);
+      window.removeEventListener('touchstart', onFirstInteraction);
+      window.removeEventListener('keydown', onFirstInteraction);
+    };
+  }, [unlockAll]);
 
   const clearNextRoundTimer = useCallback(() => {
     if (nextRoundTimer.current) {
