@@ -97,6 +97,13 @@
   gap: 0.8rem;
 }
 
+.game-shell.is-maximized {
+  width: 100%;
+  max-width: none;
+  min-height: 100dvh;
+  padding: 0.6rem 0.7rem 0.9rem;
+}
+
 .top-bar {
   display: flex;
   align-items: flex-start;

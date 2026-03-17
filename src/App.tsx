@@ -62,7 +62,7 @@ const TRANSLATIONS: Record<Language, Translation> = {
     replay: 'Znovu přehrát',
     backToMenu: 'Zpět do menu',
     maximize: 'Maximalizovat',
-    minimize: 'Ukončit fullscreen',
+    minimize: 'Zmenšit',
     correct: 'Správně!',
     wrong: 'Špatně!',
     wrongSelectedPrefix: 'Špatně. Vybral jsi zemi, která se jmenuje',
@@ -86,7 +86,7 @@ const TRANSLATIONS: Record<Language, Translation> = {
     replay: 'Replay name',
     backToMenu: 'Back to menu',
     maximize: 'Maximize',
-    minimize: 'Exit fullscreen',
+    minimize: 'Minimize',
     correct: 'Correct!',
     wrong: 'Wrong!',
     wrongSelectedPrefix: 'Wrong. You selected',
@@ -119,12 +119,17 @@ export default function App() {
   const [roundNumber, setRoundNumber] = useState(1);
   const [score, setScore] = useState(0);
   const [focusedIndex, setFocusedIndex] = useState(0);
+  const [isInputLocked, setIsInputLocked] = useState(false);
   const [answerState, setAnswerState] = useState<AnswerState>({ selectedId: null, wasCorrect: null });
+
   const [canFullscreen, setCanFullscreen] = useState(Boolean(document.fullscreenEnabled));
   const [isFullscreen, setIsFullscreen] = useState(Boolean(document.fullscreenElement));
+  const [isPseudoMaximized, setIsPseudoMaximized] = useState(false);
 
   const buttonRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const nextRoundTimer = useRef<number | null>(null);
+  const selectionLockRef = useRef(false);
+  const flowIdRef = useRef(0);
 
   const feedbackAudioSources = useMemo(
     () => [
@@ -140,6 +145,12 @@ export default function App() {
   const { play, playAndWait, unlockAll, prepare } = useAudioManager(feedbackAudioSources);
 
   const t = TRANSLATIONS[language];
+  const isMaximized = isFullscreen || isPseudoMaximized;
+
+  const bumpFlow = useCallback(() => {
+    flowIdRef.current += 1;
+    return flowIdRef.current;
+  }, []);
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
@@ -147,8 +158,13 @@ export default function App() {
 
   useEffect(() => {
     const onFullscreenChange = () => {
-      setIsFullscreen(Boolean(document.fullscreenElement));
+      const hasFullscreen = Boolean(document.fullscreenElement);
+      setIsFullscreen(hasFullscreen);
       setCanFullscreen(Boolean(document.fullscreenEnabled));
+
+      if (hasFullscreen) {
+        setIsPseudoMaximized(false);
+      }
     };
 
     onFullscreenChange();
@@ -212,12 +228,15 @@ export default function App() {
       setRecentCorrectHistory(next.nextHistory);
       setFocusedIndex(0);
       setAnswerState({ selectedId: null, wasCorrect: null });
+      setIsInputLocked(false);
+      selectionLockRef.current = false;
     },
     []
   );
 
   const startGame = useCallback(
     (grid: GridOption) => {
+      bumpFlow();
       clearNextRoundTimer();
       setActiveGrid(grid);
       setRoundNumber(1);
@@ -225,10 +244,11 @@ export default function App() {
       setIsInMenu(false);
       startRoundWithGrid(grid, []);
     },
-    [clearNextRoundTimer, startRoundWithGrid]
+    [bumpFlow, clearNextRoundTimer, startRoundWithGrid]
   );
 
   const backToMenu = useCallback(() => {
+    bumpFlow();
     clearNextRoundTimer();
     setIsInMenu(true);
     setActiveGrid(null);
@@ -237,25 +257,28 @@ export default function App() {
     setRoundNumber(1);
     setScore(0);
     setFocusedIndex(0);
+    setIsInputLocked(false);
     setAnswerState({ selectedId: null, wasCorrect: null });
-  }, [clearNextRoundTimer]);
+    selectionLockRef.current = false;
+  }, [bumpFlow, clearNextRoundTimer]);
 
-  const toggleFullscreen = useCallback(async () => {
-    if (!document.fullscreenEnabled) {
-      return;
-    }
+  const toggleMaximize = useCallback(async () => {
+    if (canFullscreen) {
+      try {
+        if (document.fullscreenElement) {
+          await document.exitFullscreen();
+          return;
+        }
 
-    try {
-      if (document.fullscreenElement) {
-        await document.exitFullscreen();
+        await document.documentElement.requestFullscreen();
         return;
+      } catch {
+        // Fall through to pseudo-maximize mode.
       }
-
-      await document.documentElement.requestFullscreen();
-    } catch {
-      // Ignore fullscreen errors to keep gameplay uninterrupted.
     }
-  }, []);
+
+    setIsPseudoMaximized((value) => !value);
+  }, [canFullscreen]);
 
   const playCurrentCountryName = useCallback(() => {
     if (!round) {
@@ -266,6 +289,7 @@ export default function App() {
     if (!audio) {
       return;
     }
+
     void play(audio);
   }, [getCountryAudio, play, round]);
 
@@ -308,15 +332,20 @@ export default function App() {
 
   useEffect(() => {
     return () => {
+      bumpFlow();
       clearNextRoundTimer();
     };
-  }, [clearNextRoundTimer]);
+  }, [bumpFlow, clearNextRoundTimer]);
 
   const selectAnswer = useCallback(
     (choiceIndex: number) => {
-      if (!round || answerState.selectedId) {
+      if (!round || isInputLocked || answerState.selectedId || selectionLockRef.current) {
         return;
       }
+
+      selectionLockRef.current = true;
+      setIsInputLocked(true);
+      const flowId = bumpFlow();
 
       const selected = round.choices[choiceIndex];
       const isCorrect = selected.id === round.correct.id;
@@ -325,7 +354,6 @@ export default function App() {
       setAnswerState({ selectedId: selected.id, wasCorrect: isCorrect });
 
       const feedback = FEEDBACK_AUDIO[language];
-
       clearNextRoundTimer();
 
       if (isCorrect) {
@@ -333,6 +361,9 @@ export default function App() {
         void play(resolveAssetPath(feedback.correct));
 
         nextRoundTimer.current = window.setTimeout(() => {
+          if (flowIdRef.current !== flowId) {
+            return;
+          }
           startNextRound();
         }, NEXT_ROUND_DELAY_CORRECT_MS);
         return;
@@ -342,15 +373,37 @@ export default function App() {
 
       void (async () => {
         await playAndWait(resolveAssetPath(feedback.wrong));
+        if (flowIdRef.current !== flowId) {
+          return;
+        }
+
         await playAndWait(resolveAssetPath(feedback.selected));
+        if (flowIdRef.current !== flowId) {
+          return;
+        }
+
         if (selectedAudio) {
           await playAndWait(selectedAudio);
+          if (flowIdRef.current !== flowId) {
+            return;
+          }
         }
 
         startNextRound();
       })();
     },
-    [answerState.selectedId, clearNextRoundTimer, getCountryAudio, language, play, playAndWait, round, startNextRound]
+    [
+      answerState.selectedId,
+      bumpFlow,
+      clearNextRoundTimer,
+      getCountryAudio,
+      isInputLocked,
+      language,
+      play,
+      playAndWait,
+      round,
+      startNextRound
+    ]
   );
 
   useEffect(() => {
@@ -361,7 +414,7 @@ export default function App() {
     const activeRound = round;
 
     function onKeyDown(event: KeyboardEvent) {
-      if (answerState.selectedId) {
+      if (isInputLocked || answerState.selectedId) {
         return;
       }
 
@@ -385,7 +438,7 @@ export default function App() {
 
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [answerState.selectedId, focusedIndex, isInMenu, round, selectAnswer]);
+  }, [answerState.selectedId, focusedIndex, isInMenu, isInputLocked, round, selectAnswer]);
 
   const toggleTheme = () => {
     setTheme((value) => (value === 'light' ? 'dark' : 'light'));
@@ -446,7 +499,7 @@ export default function App() {
   const gridStyle = { '--grid-columns': String(activeGrid.columns) } as CSSProperties;
 
   return (
-    <main className="game-shell">
+    <main className={`game-shell ${isMaximized ? 'is-maximized' : ''}`}>
       <header className="top-bar">
         <div className="top-left">
           <h1>{t.title}</h1>
@@ -454,11 +507,9 @@ export default function App() {
             <button type="button" className="menu-back-button" onClick={backToMenu}>
               {t.backToMenu}
             </button>
-            {canFullscreen && (
-              <button type="button" className="toggle-button" onClick={toggleFullscreen}>
-                {isFullscreen ? t.minimize : t.maximize}
-              </button>
-            )}
+            <button type="button" className="toggle-button" onClick={toggleMaximize}>
+              {isMaximized ? t.minimize : t.maximize}
+            </button>
             <button type="button" className="toggle-button" onClick={toggleLanguage}>
               {language === 'cs' ? TRANSLATIONS.en.languageEn : TRANSLATIONS.cs.languageCs}
             </button>
@@ -504,7 +555,7 @@ export default function App() {
               flag={choice}
               displayName={`${t.flagCardAriaPrefix}: ${displayName}`}
               isFocused={focusedIndex === index}
-              isLocked={answerState.selectedId !== null}
+              isLocked={isInputLocked || answerState.selectedId !== null}
               isCorrectChoice={isCorrectChoice}
               isWrongChoice={isWrongChoice}
               isDimmed={isDimmed}
