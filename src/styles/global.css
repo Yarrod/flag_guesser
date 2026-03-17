@@ -61,8 +61,3 @@ button {
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
 }
-
-html,
-body {
-  touch-action: manipulation;
-}

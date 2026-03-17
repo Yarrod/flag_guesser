@@ -137,26 +137,8 @@ export default function App() {
     document.documentElement.setAttribute('data-theme', theme);
   }, [theme]);
 
-  useEffect(() => {
-    let didUnlock = false;
-
-    const onFirstInteraction = () => {
-      if (didUnlock) {
-        return;
-      }
-      didUnlock = true;
-      void unlockAll();
-    };
-
-    window.addEventListener('pointerdown', onFirstInteraction, { passive: true });
-    window.addEventListener('touchstart', onFirstInteraction, { passive: true });
-    window.addEventListener('keydown', onFirstInteraction);
-
-    return () => {
-      window.removeEventListener('pointerdown', onFirstInteraction);
-      window.removeEventListener('touchstart', onFirstInteraction);
-      window.removeEventListener('keydown', onFirstInteraction);
-    };
+  const ensureAudioUnlocked = useCallback(() => {
+    void unlockAll();
   }, [unlockAll]);
 
   const clearNextRoundTimer = useCallback(() => {
@@ -201,6 +183,7 @@ export default function App() {
 
   const startGame = useCallback(
     (grid: GridOption) => {
+      ensureAudioUnlocked();
       clearNextRoundTimer();
       setActiveGrid(grid);
       setRoundNumber(1);
@@ -208,7 +191,7 @@ export default function App() {
       setIsInMenu(false);
       startRoundWithGrid(grid, []);
     },
-    [clearNextRoundTimer, startRoundWithGrid]
+    [clearNextRoundTimer, ensureAudioUnlocked, startRoundWithGrid]
   );
 
   const backToMenu = useCallback(() => {
@@ -284,6 +267,8 @@ export default function App() {
         return;
       }
 
+      ensureAudioUnlocked();
+
       const selected = round.choices[choiceIndex];
       const isCorrect = selected.id === round.correct.id;
 
@@ -316,7 +301,7 @@ export default function App() {
         startNextRound();
       })();
     },
-    [answerState.selectedId, clearNextRoundTimer, getCountryAudio, language, play, playAndWait, round, startNextRound]
+    [answerState.selectedId, clearNextRoundTimer, ensureAudioUnlocked, getCountryAudio, language, play, playAndWait, round, startNextRound]
   );
 
   useEffect(() => {
@@ -360,6 +345,11 @@ export default function App() {
   const toggleLanguage = () => {
     setLanguage((value) => (value === 'cs' ? 'en' : 'cs'));
   };
+
+  const handleReplay = useCallback(() => {
+    ensureAudioUnlocked();
+    playCurrentCountryName();
+  }, [ensureAudioUnlocked, playCurrentCountryName]);
 
   if (isInMenu) {
     return (
@@ -432,7 +422,7 @@ export default function App() {
       </header>
 
       <section className="controls" aria-label={t.controls}>
-        <ReplayButton label={t.replay} onReplay={playCurrentCountryName} />
+        <ReplayButton label={t.replay} onReplay={handleReplay} />
       </section>
 
       <section className="feedback" aria-live="polite">
