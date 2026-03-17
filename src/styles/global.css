@@ -51,13 +51,12 @@ body {
   font-weight: 700;
   color: var(--text-main);
   background: var(--bg-gradient);
-  touch-action: manipulation;
   transition: background 220ms ease;
+  -webkit-text-size-adjust: 100%;
 }
 
 button {
   font: inherit;
   color: inherit;
-  touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
 }
