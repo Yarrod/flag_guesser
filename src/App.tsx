@@ -28,6 +28,8 @@ type Translation = {
   chooseLanguage: string;
   replay: string;
   backToMenu: string;
+  maximize: string;
+  minimize: string;
   correct: string;
   wrong: string;
   wrongSelectedPrefix: string;
@@ -59,6 +61,8 @@ const TRANSLATIONS: Record<Language, Translation> = {
     chooseLanguage: 'Vyber jazyk',
     replay: 'Znovu přehrát',
     backToMenu: 'Zpět do menu',
+    maximize: 'Maximalizovat',
+    minimize: 'Ukončit fullscreen',
     correct: 'Správně!',
     wrong: 'Špatně!',
     wrongSelectedPrefix: 'Špatně. Vybral jsi zemi, která se jmenuje',
@@ -81,6 +85,8 @@ const TRANSLATIONS: Record<Language, Translation> = {
     chooseLanguage: 'Choose language',
     replay: 'Replay name',
     backToMenu: 'Back to menu',
+    maximize: 'Maximize',
+    minimize: 'Exit fullscreen',
     correct: 'Correct!',
     wrong: 'Wrong!',
     wrongSelectedPrefix: 'Wrong. You selected',
@@ -114,6 +120,8 @@ export default function App() {
   const [score, setScore] = useState(0);
   const [focusedIndex, setFocusedIndex] = useState(0);
   const [answerState, setAnswerState] = useState<AnswerState>({ selectedId: null, wasCorrect: null });
+  const [canFullscreen, setCanFullscreen] = useState(Boolean(document.fullscreenEnabled));
+  const [isFullscreen, setIsFullscreen] = useState(Boolean(document.fullscreenElement));
 
   const buttonRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const nextRoundTimer = useRef<number | null>(null);
@@ -137,8 +145,35 @@ export default function App() {
     document.documentElement.setAttribute('data-theme', theme);
   }, [theme]);
 
-  const ensureAudioUnlocked = useCallback(() => {
-    void unlockAll();
+  useEffect(() => {
+    const onFullscreenChange = () => {
+      setIsFullscreen(Boolean(document.fullscreenElement));
+      setCanFullscreen(Boolean(document.fullscreenEnabled));
+    };
+
+    onFullscreenChange();
+    document.addEventListener('fullscreenchange', onFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', onFullscreenChange);
+  }, []);
+
+  useEffect(() => {
+    let didUnlock = false;
+
+    const onFirstInteraction = () => {
+      if (didUnlock) {
+        return;
+      }
+      didUnlock = true;
+      void unlockAll();
+    };
+
+    window.addEventListener('pointerdown', onFirstInteraction, { passive: true });
+    window.addEventListener('keydown', onFirstInteraction);
+
+    return () => {
+      window.removeEventListener('pointerdown', onFirstInteraction);
+      window.removeEventListener('keydown', onFirstInteraction);
+    };
   }, [unlockAll]);
 
   const clearNextRoundTimer = useCallback(() => {
@@ -183,7 +218,6 @@ export default function App() {
 
   const startGame = useCallback(
     (grid: GridOption) => {
-      ensureAudioUnlocked();
       clearNextRoundTimer();
       setActiveGrid(grid);
       setRoundNumber(1);
@@ -191,7 +225,7 @@ export default function App() {
       setIsInMenu(false);
       startRoundWithGrid(grid, []);
     },
-    [clearNextRoundTimer, ensureAudioUnlocked, startRoundWithGrid]
+    [clearNextRoundTimer, startRoundWithGrid]
   );
 
   const backToMenu = useCallback(() => {
@@ -205,6 +239,23 @@ export default function App() {
     setFocusedIndex(0);
     setAnswerState({ selectedId: null, wasCorrect: null });
   }, [clearNextRoundTimer]);
+
+  const toggleFullscreen = useCallback(async () => {
+    if (!document.fullscreenEnabled) {
+      return;
+    }
+
+    try {
+      if (document.fullscreenElement) {
+        await document.exitFullscreen();
+        return;
+      }
+
+      await document.documentElement.requestFullscreen();
+    } catch {
+      // Ignore fullscreen errors to keep gameplay uninterrupted.
+    }
+  }, []);
 
   const playCurrentCountryName = useCallback(() => {
     if (!round) {
@@ -267,8 +318,6 @@ export default function App() {
         return;
       }
 
-      ensureAudioUnlocked();
-
       const selected = round.choices[choiceIndex];
       const isCorrect = selected.id === round.correct.id;
 
@@ -301,7 +350,7 @@ export default function App() {
         startNextRound();
       })();
     },
-    [answerState.selectedId, clearNextRoundTimer, ensureAudioUnlocked, getCountryAudio, language, play, playAndWait, round, startNextRound]
+    [answerState.selectedId, clearNextRoundTimer, getCountryAudio, language, play, playAndWait, round, startNextRound]
   );
 
   useEffect(() => {
@@ -345,11 +394,6 @@ export default function App() {
   const toggleLanguage = () => {
     setLanguage((value) => (value === 'cs' ? 'en' : 'cs'));
   };
-
-  const handleReplay = useCallback(() => {
-    ensureAudioUnlocked();
-    playCurrentCountryName();
-  }, [ensureAudioUnlocked, playCurrentCountryName]);
 
   if (isInMenu) {
     return (
@@ -410,6 +454,11 @@ export default function App() {
             <button type="button" className="menu-back-button" onClick={backToMenu}>
               {t.backToMenu}
             </button>
+            {canFullscreen && (
+              <button type="button" className="toggle-button" onClick={toggleFullscreen}>
+                {isFullscreen ? t.minimize : t.maximize}
+              </button>
+            )}
             <button type="button" className="toggle-button" onClick={toggleLanguage}>
               {language === 'cs' ? TRANSLATIONS.en.languageEn : TRANSLATIONS.cs.languageCs}
             </button>
@@ -422,7 +471,7 @@ export default function App() {
       </header>
 
       <section className="controls" aria-label={t.controls}>
-        <ReplayButton label={t.replay} onReplay={handleReplay} />
+        <ReplayButton label={t.replay} onReplay={playCurrentCountryName} />
       </section>
 
       <section className="feedback" aria-live="polite">
