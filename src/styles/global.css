@@ -59,4 +59,10 @@ button {
   font: inherit;
   color: inherit;
   -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+html,
+body {
+  touch-action: manipulation;
 }

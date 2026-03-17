@@ -118,10 +118,8 @@ export default function App() {
   const buttonRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const nextRoundTimer = useRef<number | null>(null);
 
-  const allAudioSources = useMemo(
+  const feedbackAudioSources = useMemo(
     () => [
-      ...FLAGS.map((item) => resolveAssetPath(item.audioPath)),
-      ...FLAGS.map((item) => resolveAssetPath(item.audioPathEn)),
       resolveAssetPath(FEEDBACK_AUDIO.cs.correct),
       resolveAssetPath(FEEDBACK_AUDIO.cs.wrong),
       resolveAssetPath(FEEDBACK_AUDIO.cs.selected),
@@ -131,7 +129,7 @@ export default function App() {
     ],
     []
   );
-  const { play, playAndWait, unlockAll } = useAudioManager(allAudioSources);
+  const { play, playAndWait, unlockAll, prepare } = useAudioManager(feedbackAudioSources);
 
   const t = TRANSLATIONS[language];
 
@@ -236,6 +234,19 @@ export default function App() {
     }
     void play(audio);
   }, [getCountryAudio, play, round]);
+
+  useEffect(() => {
+    if (!round) {
+      return;
+    }
+
+    const choiceAudios = round.choices.map((choice) =>
+      resolveAssetPath(language === 'cs' ? choice.audioPath : choice.audioPathEn)
+    );
+    const correctAudio = resolveAssetPath(language === 'cs' ? round.correct.audioPath : round.correct.audioPathEn);
+
+    prepare([...choiceAudios, correctAudio]);
+  }, [language, prepare, round]);
 
   const startNextRound = useCallback(() => {
     if (!activeGrid) {

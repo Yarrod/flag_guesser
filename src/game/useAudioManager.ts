@@ -4,33 +4,14 @@ type AudioMap = Map<string, HTMLAudioElement>;
 
 function createAudio(src: string): HTMLAudioElement {
   const audio = new Audio(src);
-  audio.preload = 'auto';
-  audio.load();
+  // Keep startup light, then browser can fetch more when playback happens.
+  audio.preload = 'metadata';
   return audio;
 }
 
-export function useAudioManager(sources: string[]) {
+export function useAudioManager(initialSources: string[] = []) {
   const audioMapRef = useRef<AudioMap>(new Map());
   const isUnlockedRef = useRef(false);
-
-  useEffect(() => {
-    const uniqueSources = [...new Set(sources)];
-    const map = audioMapRef.current;
-
-    uniqueSources.forEach((src) => {
-      if (!map.has(src)) {
-        map.set(src, createAudio(src));
-      }
-    });
-
-    return () => {
-      map.forEach((audio) => {
-        audio.pause();
-        audio.src = '';
-      });
-      map.clear();
-    };
-  }, [sources]);
 
   const getAudio = useCallback((src: string) => {
     const map = audioMapRef.current;
@@ -40,11 +21,54 @@ export function useAudioManager(sources: string[]) {
     return map.get(src) ?? null;
   }, []);
 
+  const prepare = useCallback(
+    (sources: string[]) => {
+      const uniqueSources = [...new Set(sources)];
+      uniqueSources.forEach((src) => {
+        if (!src) {
+          return;
+        }
+
+        const audio = getAudio(src);
+        if (!audio) {
+          return;
+        }
+
+        if (audio.preload !== 'auto') {
+          audio.preload = 'auto';
+        }
+        if (audio.readyState === 0) {
+          audio.load();
+        }
+      });
+    },
+    [getAudio]
+  );
+
+  useEffect(() => {
+    prepare(initialSources);
+  }, [initialSources, prepare]);
+
+  useEffect(() => {
+    return () => {
+      const map = audioMapRef.current;
+      map.forEach((audio) => {
+        audio.pause();
+        audio.src = '';
+      });
+      map.clear();
+    };
+  }, []);
+
   const play = useCallback(
     async (src: string) => {
       const audio = getAudio(src);
       if (!audio) {
         return;
+      }
+
+      if (audio.readyState === 0) {
+        audio.load();
       }
 
       audio.currentTime = 0;
@@ -63,6 +87,10 @@ export function useAudioManager(sources: string[]) {
       const audio = getAudio(src);
       if (!audio) {
         return;
+      }
+
+      if (audio.readyState === 0) {
+        audio.load();
       }
 
       audio.currentTime = 0;
@@ -107,6 +135,9 @@ export function useAudioManager(sources: string[]) {
         const originalMuted = audio.muted;
         try {
           audio.muted = true;
+          if (audio.readyState === 0) {
+            audio.load();
+          }
           audio.currentTime = 0;
           await audio.play();
           audio.pause();
@@ -120,5 +151,5 @@ export function useAudioManager(sources: string[]) {
     );
   }, []);
 
-  return { play, playAndWait, unlockAll };
+  return { play, playAndWait, unlockAll, prepare };
 }
