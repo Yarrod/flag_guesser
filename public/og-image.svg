@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0f172a" />
+      <stop offset="100%" stop-color="#1f6feb" />
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)" />
+  <g transform="translate(90 120)">
+    <rect width="260" height="180" rx="18" fill="#ffffff" />
+    <rect width="260" height="60" rx="18" fill="#de2910" />
+    <rect y="60" width="260" height="60" fill="#ffffff" />
+    <rect y="120" width="260" height="60" fill="#11457e" />
+    <circle cx="58" cy="90" r="20" fill="#f4c542" />
+  </g>
+  <text x="400" y="270" fill="#ffffff" font-size="88" font-family="Trebuchet MS, Segoe UI, Arial, sans-serif" font-weight="700">Hádej Vlajku</text>
+  <text x="400" y="350" fill="#dbeafe" font-size="46" font-family="Trebuchet MS, Segoe UI, Arial, sans-serif" font-weight="600">Dětská hra na hádání vlajek</text>
+  <text x="400" y="430" fill="#c7d2fe" font-size="34" font-family="Trebuchet MS, Segoe UI, Arial, sans-serif">Czech • English • Touch Friendly</text>
+</svg>

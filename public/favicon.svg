@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Flag Guesser Icon">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1f6feb" />
+      <stop offset="100%" stop-color="#188038" />
+    </linearGradient>
+  </defs>
+  <rect width="128" height="128" rx="24" fill="url(#bg)" />
+  <rect x="20" y="28" width="88" height="56" rx="8" fill="#ffffff" />
+  <rect x="20" y="28" width="88" height="18" rx="8" fill="#de2910" />
+  <rect x="20" y="46" width="88" height="20" fill="#ffffff" />
+  <rect x="20" y="66" width="88" height="18" rx="0" fill="#11457e" />
+  <circle cx="40" cy="56" r="8" fill="#f4c542" />
+  <path d="M33 94h62" stroke="#ffffff" stroke-width="8" stroke-linecap="round" />
+</svg>
