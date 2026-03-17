@@ -87,7 +87,7 @@ const TRANSLATIONS: Record<Language, Translation> = {
     minimize: 'Zmenšit',
     correct: 'Správně!',
     wrong: 'Špatně!',
-    wrongSelectedPrefix: 'Špatně. Vybral jsi zemi, která se jmenuje',
+    wrongSelectedPrefix: 'Špatně. Hádal jsi',
     correctAnswerPrefix: 'Správná odpověď je',
     selectedBadge: 'Tvůj výběr',
     correctBadge: 'Správně',
