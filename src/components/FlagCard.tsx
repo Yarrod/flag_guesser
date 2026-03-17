@@ -46,9 +46,7 @@ export function FlagCard({
       ]
         .filter(Boolean)
         .join(' ')}
-      onClick={onSelect}
-      onTouchEnd={(event) => {
-        event.preventDefault();
+      onPointerUp={() => {
         if (!isLocked) {
           onSelect();
         }
