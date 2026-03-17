@@ -396,14 +396,24 @@ export default function App() {
 
       if (isCorrect) {
         setScore((value) => value + 1);
-        void play(resolveAssetPath(feedback.correct));
 
-        nextRoundTimer.current = window.setTimeout(() => {
+        void (async () => {
+          const startedAt = performance.now();
+          await playAndWait(resolveAssetPath(feedback.correct));
           if (flowIdRef.current !== flowId) {
             return;
           }
-          startNextRound();
-        }, NEXT_ROUND_DELAY_CORRECT_MS);
+
+          const elapsedMs = performance.now() - startedAt;
+          const remainingDelayMs = Math.max(0, NEXT_ROUND_DELAY_CORRECT_MS - elapsedMs);
+
+          nextRoundTimer.current = window.setTimeout(() => {
+            if (flowIdRef.current !== flowId) {
+              return;
+            }
+            startNextRound();
+          }, remainingDelayMs);
+        })();
         return;
       }
 
@@ -437,7 +447,6 @@ export default function App() {
       getCountryAudio,
       isInputLocked,
       language,
-      play,
       playAndWait,
       round,
       startNextRound
