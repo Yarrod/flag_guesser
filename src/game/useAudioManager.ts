@@ -4,9 +4,31 @@ type AudioMap = Map<string, HTMLAudioElement>;
 
 function createAudio(src: string): HTMLAudioElement {
   const audio = new Audio(src);
-  // Keep startup light, then browser can fetch more when playback happens.
   audio.preload = 'metadata';
+  // Helps iOS keep media playback inline and less restrictive.
+  audio.setAttribute('playsinline', 'true');
+  audio.setAttribute('webkit-playsinline', 'true');
   return audio;
+}
+
+async function unlockAudioElement(audio: HTMLAudioElement): Promise<boolean> {
+  const originalMuted = audio.muted;
+
+  try {
+    audio.muted = true;
+    if (audio.readyState === 0) {
+      audio.load();
+    }
+    audio.currentTime = 0;
+    await audio.play();
+    audio.pause();
+    audio.currentTime = 0;
+    return true;
+  } catch {
+    return false;
+  } finally {
+    audio.muted = originalMuted;
+  }
 }
 
 export function useAudioManager(initialSources: string[] = []) {
@@ -75,8 +97,17 @@ export function useAudioManager(initialSources: string[] = []) {
       try {
         await audio.play();
       } catch {
-        // Silent fail: autoplay may be blocked until first user interaction
-        // or audio files are missing/invalid.
+        // iOS can block the first playback if it is not recognized as unlocked.
+        const unlocked = await unlockAudioElement(audio);
+        if (!unlocked) {
+          return;
+        }
+
+        isUnlockedRef.current = true;
+        audio.currentTime = 0;
+        await audio.play().catch(() => {
+          // If retry fails, stay silent instead of throwing.
+        });
       }
     },
     [getAudio]
@@ -114,10 +145,23 @@ export function useAudioManager(initialSources: string[] = []) {
         audio.addEventListener('ended', onEnded);
         audio.addEventListener('error', onError);
 
-        audio.play().catch(() => {
-          cleanup();
-          resolve();
-        });
+        audio
+          .play()
+          .catch(async () => {
+            const unlocked = await unlockAudioElement(audio);
+            if (unlocked) {
+              isUnlockedRef.current = true;
+              audio.currentTime = 0;
+              await audio.play().catch(() => {
+                cleanup();
+                resolve();
+              });
+              return;
+            }
+
+            cleanup();
+            resolve();
+          });
       });
     },
     [getAudio]
@@ -127,28 +171,18 @@ export function useAudioManager(initialSources: string[] = []) {
     if (isUnlockedRef.current) {
       return;
     }
-    isUnlockedRef.current = true;
 
     const audios = [...audioMapRef.current.values()];
-    await Promise.all(
-      audios.map(async (audio) => {
-        const originalMuted = audio.muted;
-        try {
-          audio.muted = true;
-          if (audio.readyState === 0) {
-            audio.load();
-          }
-          audio.currentTime = 0;
-          await audio.play();
-          audio.pause();
-          audio.currentTime = 0;
-        } catch {
-          // If this fails, normal playback may still work for some clips.
-        } finally {
-          audio.muted = originalMuted;
-        }
-      })
-    );
+    if (audios.length === 0) {
+      isUnlockedRef.current = true;
+      return;
+    }
+
+    const first = audios[0];
+    const unlocked = await unlockAudioElement(first);
+    if (unlocked) {
+      isUnlockedRef.current = true;
+    }
   }, []);
 
   return { play, playAndWait, unlockAll, prepare };
