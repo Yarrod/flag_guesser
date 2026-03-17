@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { FlagItem } from '../data/flags';
+import { resolveAssetPath } from '../utils/assetPath';
 
 type FlagCardProps = {
   flag: FlagItem;
@@ -60,7 +61,7 @@ export function FlagCard({
         ) : (
           <img
             className="flag-image"
-            src={flag.imagePath}
+            src={resolveAssetPath(flag.imagePath)}
             alt=""
             draggable={false}
             onError={() => setImageFailed(true)}

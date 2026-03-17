@@ -6,6 +6,7 @@ import { FEEDBACK_AUDIO, FLAGS } from './data/flags';
 import { generateRound } from './game/rounds';
 import type { Round } from './game/types';
 import { useAudioManager } from './game/useAudioManager';
+import { resolveAssetPath } from './utils/assetPath';
 
 type AnswerState = {
   selectedId: string | null;
@@ -119,14 +120,14 @@ export default function App() {
 
   const allAudioSources = useMemo(
     () => [
-      ...FLAGS.map((item) => item.audioPath),
-      ...FLAGS.map((item) => item.audioPathEn),
-      FEEDBACK_AUDIO.cs.correct,
-      FEEDBACK_AUDIO.cs.wrong,
-      FEEDBACK_AUDIO.cs.selected,
-      FEEDBACK_AUDIO.en.correct,
-      FEEDBACK_AUDIO.en.wrong,
-      FEEDBACK_AUDIO.en.selected
+      ...FLAGS.map((item) => resolveAssetPath(item.audioPath)),
+      ...FLAGS.map((item) => resolveAssetPath(item.audioPathEn)),
+      resolveAssetPath(FEEDBACK_AUDIO.cs.correct),
+      resolveAssetPath(FEEDBACK_AUDIO.cs.wrong),
+      resolveAssetPath(FEEDBACK_AUDIO.cs.selected),
+      resolveAssetPath(FEEDBACK_AUDIO.en.correct),
+      resolveAssetPath(FEEDBACK_AUDIO.en.wrong),
+      resolveAssetPath(FEEDBACK_AUDIO.en.selected)
     ],
     []
   );
@@ -151,7 +152,7 @@ export default function App() {
       if (!flag) {
         return '';
       }
-      return language === 'cs' ? flag.audioPath : flag.audioPathEn;
+      return resolveAssetPath(language === 'cs' ? flag.audioPath : flag.audioPathEn);
     },
     [language]
   );
@@ -262,7 +263,7 @@ export default function App() {
 
       if (isCorrect) {
         setScore((value) => value + 1);
-        void play(feedback.correct);
+        void play(resolveAssetPath(feedback.correct));
 
         nextRoundTimer.current = window.setTimeout(() => {
           startNextRound();
@@ -273,8 +274,8 @@ export default function App() {
       const selectedAudio = getCountryAudio(selected.id);
 
       void (async () => {
-        await playAndWait(feedback.wrong);
-        await playAndWait(feedback.selected);
+        await playAndWait(resolveAssetPath(feedback.wrong));
+        await playAndWait(resolveAssetPath(feedback.selected));
         if (selectedAudio) {
           await playAndWait(selectedAudio);
         }
