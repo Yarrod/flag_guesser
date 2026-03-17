@@ -15,6 +15,7 @@ type AnswerState = {
 
 type Theme = 'light' | 'dark';
 type Language = 'cs' | 'en';
+type FlagPool = 'all' | 'easy';
 
 type GridOption = {
   id: string;
@@ -26,6 +27,9 @@ type Translation = {
   title: string;
   chooseGrid: string;
   chooseLanguage: string;
+  chooseSet: string;
+  setAll: string;
+  setEasy: string;
   replay: string;
   backToMenu: string;
   maximize: string;
@@ -54,11 +58,29 @@ const GRID_OPTIONS: GridOption[] = [
   { id: '9', choices: 9, columns: 3 }
 ];
 
+const EASY_FLAG_IDS = new Set([
+  // Europe
+  'al', 'ad', 'at', 'be', 'ba', 'bg', 'hr', 'cy', 'cz', 'dk', 'ee', 'fi', 'fr', 'de', 'gr', 'hu', 'is', 'ie',
+  'it', 'lv', 'lt', 'lu', 'mt', 'md', 'mc', 'me', 'nl', 'mk', 'no', 'pl', 'pt', 'ro', 'sm', 'rs', 'sk', 'si',
+  'es', 'se', 'ch', 'ua', 'gb', 'va', 'xk',
+  // North America
+  'ca', 'cu', 'jm', 'mx', 'us',
+  // Australia / Oceania
+  'au', 'nz',
+  // A few very well-known Asian countries
+  'in', 'jp', 'kr', 'sg', 'th', 'vn'
+]);
+
+const EASY_FLAGS = FLAGS.filter((flag) => EASY_FLAG_IDS.has(flag.id));
+
 const TRANSLATIONS: Record<Language, Translation> = {
   cs: {
     title: 'Hádej vlajku',
     chooseGrid: 'Vyber velikost mřížky',
     chooseLanguage: 'Vyber jazyk',
+    chooseSet: 'Vyber sadu vlajek',
+    setAll: 'Všechny země',
+    setEasy: 'Snadná sada',
     replay: 'Znovu přehrát',
     backToMenu: 'Zpět do menu',
     maximize: 'Maximalizovat',
@@ -83,6 +105,9 @@ const TRANSLATIONS: Record<Language, Translation> = {
     title: 'Guess the Flag',
     chooseGrid: 'Choose grid size',
     chooseLanguage: 'Choose language',
+    chooseSet: 'Choose flag set',
+    setAll: 'All countries',
+    setEasy: 'Easy set',
     replay: 'Replay name',
     backToMenu: 'Back to menu',
     maximize: 'Maximize',
@@ -113,7 +138,9 @@ export default function App() {
   const [isInMenu, setIsInMenu] = useState(true);
   const [language, setLanguage] = useState<Language>('cs');
   const [theme, setTheme] = useState<Theme>(getSystemTheme);
+  const [flagPool, setFlagPool] = useState<FlagPool>('all');
   const [activeGrid, setActiveGrid] = useState<GridOption | null>(null);
+  const [gameFlags, setGameFlags] = useState<typeof FLAGS | null>(null);
   const [round, setRound] = useState<Round | null>(null);
   const [recentCorrectHistory, setRecentCorrectHistory] = useState<string[]>([]);
   const [roundNumber, setRoundNumber] = useState(1);
@@ -146,6 +173,13 @@ export default function App() {
 
   const t = TRANSLATIONS[language];
   const isMaximized = isFullscreen || isPseudoMaximized;
+
+  useEffect(() => {
+    document.body.classList.toggle('app-maximized', isMaximized);
+    return () => {
+      document.body.classList.remove('app-maximized');
+    };
+  }, [isMaximized]);
 
   const bumpFlow = useCallback(() => {
     flowIdRef.current += 1;
@@ -201,50 +235,53 @@ export default function App() {
 
   const getCountryAudio = useCallback(
     (flagId: string) => {
-      const flag = FLAGS.find((item) => item.id === flagId);
+      const source = gameFlags ?? FLAGS;
+      const flag = source.find((item) => item.id === flagId) ?? FLAGS.find((item) => item.id === flagId);
       if (!flag) {
         return '';
       }
       return resolveAssetPath(language === 'cs' ? flag.audioPath : flag.audioPathEn);
     },
-    [language]
+    [gameFlags, language]
   );
 
   const getCountryName = useCallback(
     (flagId: string) => {
-      const flag = FLAGS.find((item) => item.id === flagId);
+      const source = gameFlags ?? FLAGS;
+      const flag = source.find((item) => item.id === flagId) ?? FLAGS.find((item) => item.id === flagId);
       if (!flag) {
         return '';
       }
       return language === 'cs' ? flag.czechName : flag.englishName;
     },
-    [language]
+    [gameFlags, language]
   );
 
-  const startRoundWithGrid = useCallback(
-    (grid: GridOption, history: string[]) => {
-      const next = generateRound(FLAGS, history, grid.choices);
-      setRound(next.round);
-      setRecentCorrectHistory(next.nextHistory);
-      setFocusedIndex(0);
-      setAnswerState({ selectedId: null, wasCorrect: null });
-      setIsInputLocked(false);
-      selectionLockRef.current = false;
-    },
-    []
-  );
+  const startRoundWithGrid = useCallback((grid: GridOption, history: string[], flags: typeof FLAGS) => {
+    const next = generateRound(flags, history, grid.choices);
+    setRound(next.round);
+    setRecentCorrectHistory(next.nextHistory);
+    setFocusedIndex(0);
+    setAnswerState({ selectedId: null, wasCorrect: null });
+    setIsInputLocked(false);
+    selectionLockRef.current = false;
+  }, []);
 
   const startGame = useCallback(
     (grid: GridOption) => {
+      const selectedPool = flagPool === 'easy' ? EASY_FLAGS : FLAGS;
+      const safePool = selectedPool.length >= grid.choices ? selectedPool : FLAGS;
+
       bumpFlow();
       clearNextRoundTimer();
       setActiveGrid(grid);
+      setGameFlags(safePool);
       setRoundNumber(1);
       setScore(0);
       setIsInMenu(false);
-      startRoundWithGrid(grid, []);
+      startRoundWithGrid(grid, [], safePool);
     },
-    [bumpFlow, clearNextRoundTimer, startRoundWithGrid]
+    [bumpFlow, clearNextRoundTimer, flagPool, startRoundWithGrid]
   );
 
   const backToMenu = useCallback(() => {
@@ -252,6 +289,7 @@ export default function App() {
     clearNextRoundTimer();
     setIsInMenu(true);
     setActiveGrid(null);
+    setGameFlags(null);
     setRound(null);
     setRecentCorrectHistory([]);
     setRoundNumber(1);
@@ -307,13 +345,13 @@ export default function App() {
   }, [language, prepare, round]);
 
   const startNextRound = useCallback(() => {
-    if (!activeGrid) {
+    if (!activeGrid || !gameFlags) {
       return;
     }
 
-    startRoundWithGrid(activeGrid, recentCorrectHistory);
+    startRoundWithGrid(activeGrid, recentCorrectHistory, gameFlags);
     setRoundNumber((value) => value + 1);
-  }, [activeGrid, recentCorrectHistory, startRoundWithGrid]);
+  }, [activeGrid, gameFlags, recentCorrectHistory, startRoundWithGrid]);
 
   useEffect(() => {
     if (!isInMenu && round) {
@@ -474,6 +512,24 @@ export default function App() {
               onClick={() => setLanguage('en')}
             >
               {TRANSLATIONS.en.languageEn}
+            </button>
+          </div>
+
+          <p className="menu-label">{t.chooseSet}</p>
+          <div className="menu-set-options" role="group" aria-label={t.chooseSet}>
+            <button
+              type="button"
+              className={`menu-option ${flagPool === 'all' ? 'is-active' : ''}`}
+              onClick={() => setFlagPool('all')}
+            >
+              {t.setAll}
+            </button>
+            <button
+              type="button"
+              className={`menu-option ${flagPool === 'easy' ? 'is-active' : ''}`}
+              onClick={() => setFlagPool('easy')}
+            >
+              {t.setEasy}
             </button>
           </div>
 

@@ -36,12 +36,17 @@
 }
 
 .menu-language-options,
+.menu-set-options,
 .menu-grid-options {
   display: grid;
   gap: 0.6rem;
 }
 
 .menu-language-options {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.menu-set-options {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
@@ -98,10 +103,19 @@
 }
 
 .game-shell.is-maximized {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
   width: 100%;
   max-width: none;
-  min-height: 100dvh;
+  height: 100vh;
+  height: 100dvh;
+  margin: 0;
   padding: 0.6rem 0.7rem 0.9rem;
+  overflow: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  background: var(--bg-gradient);
 }
 
 .top-bar {
