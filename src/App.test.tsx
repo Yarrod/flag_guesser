@@ -63,6 +63,9 @@ describe('App', () => {
   const spain = getFlag('es');
   const portugal = getFlag('pt');
   const belgium = getFlag('be');
+  const austria = getFlag('at');
+  const netherlands = getFlag('nl');
+  const sweden = getFlag('se');
 
   const firstRound: Round = {
     correct: france,
@@ -72,6 +75,11 @@ describe('App', () => {
   const secondRound: Round = {
     correct: spain,
     choices: [spain, portugal, belgium]
+  };
+
+  const compactRound: Round = {
+    correct: france,
+    choices: [france, germany, italy, austria, netherlands, sweden]
   };
 
   beforeEach(() => {
@@ -116,6 +124,18 @@ describe('App', () => {
 
     expect(document.body).not.toHaveClass('app-maximized');
     expect(container.querySelector('.game-shell')).not.toHaveClass('is-maximized');
+  });
+
+  it('uses the compact mobile grid class for larger rounds', async () => {
+    queueRounds(compactRound);
+    const user = userEvent.setup();
+    const { container } = render(<App />);
+
+    await user.click(screen.getByRole('button', { name: 'English' }));
+    await user.click(screen.getByRole('button', { name: '6' }));
+
+    expect(container.querySelector('.choices-grid')).toHaveClass('choices-grid--compact-mobile');
+    expect(screen.getAllByRole('button', { name: /^Flag:/ })).toHaveLength(6);
   });
 
   it('increments the score and advances after a correct answer', async () => {

@@ -562,6 +562,9 @@ export default function App() {
   const selectedName = answerState.selectedId ? getCountryName(answerState.selectedId) : '';
   const correctName = getCountryName(round.correct.id);
   const gridStyle = { '--grid-columns': String(activeGrid.columns) } as CSSProperties;
+  const choicesGridClassName = ['choices-grid', activeGrid.choices > 3 ? 'choices-grid--compact-mobile' : '']
+    .filter(Boolean)
+    .join(' ');
 
   return (
     <main className={`game-shell ${isMaximized ? 'is-maximized' : ''}`}>
@@ -600,7 +603,7 @@ export default function App() {
         )}
       </section>
 
-      <section className="choices-grid" style={gridStyle} aria-label={t.choiceArea}>
+      <section className={choicesGridClassName} style={gridStyle} aria-label={t.choiceArea}>
         {round.choices.map((choice, index) => {
           const isSelected = answerState.selectedId === choice.id;
           const isWrongChoice = isSelected && answerState.wasCorrect === false;

@@ -434,14 +434,38 @@
     padding: 0.8rem;
   }
 
+  .game-shell.is-maximized {
+    overflow-y: auto;
+  }
+
   .menu-language-options,
   .menu-grid-options,
   .choices-grid {
     grid-template-columns: 1fr;
   }
 
+  .choices-grid--compact-mobile {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .game-shell.is-maximized .choices-grid {
+    height: auto;
+    align-content: start;
+    grid-auto-rows: auto;
+  }
+
   .flag-card {
     min-height: 23vh;
+  }
+
+  .game-shell.is-maximized .flag-card {
+    height: auto;
+    min-height: 23vh;
+  }
+
+  .game-shell.is-maximized .flag-frame {
+    height: auto;
+    aspect-ratio: 4 / 3;
   }
 
   .top-bar {
