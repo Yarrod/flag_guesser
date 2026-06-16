@@ -546,11 +546,15 @@
 
 @media (max-width: 900px) and (orientation: landscape) {
   .game-shell {
+    grid-template-columns: minmax(170px, 32vw) minmax(0, 1fr);
+    grid-template-rows: auto auto minmax(0, 1fr);
     gap: 0.5rem;
   }
 
   .top-bar {
-    flex-direction: row;
+    grid-column: 1;
+    grid-row: 1;
+    flex-direction: column;
     align-items: flex-start;
   }
 
@@ -566,8 +570,34 @@
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
+  .controls {
+    grid-column: 1;
+    grid-row: 2;
+    justify-content: flex-start;
+  }
+
+  .feedback {
+    grid-column: 1;
+    grid-row: 3;
+    justify-items: start;
+    align-content: start;
+  }
+
+  .feedback p {
+    text-align: left;
+  }
+
+  .choices-grid {
+    grid-column: 2;
+    grid-row: 1 / span 3;
+    height: 100%;
+    align-content: stretch;
+    grid-auto-rows: minmax(0, 1fr);
+  }
+
   .flag-card {
-    min-height: 20vh;
+    min-height: 0;
+    height: 100%;
   }
 
   .game-shell.is-maximized {
@@ -576,7 +606,7 @@
   }
 
   .game-shell.is-maximized .top-bar {
-    flex-direction: row;
+    flex-direction: column;
     align-items: flex-start;
   }
 
@@ -633,6 +663,12 @@
 
   .game-shell.is-maximized .flag-card {
     padding: 0.16rem;
+  }
+
+  .game-shell.is-maximized .flag-frame {
+    height: 100%;
+    min-height: 0;
+    aspect-ratio: auto;
   }
 
   .game-shell.is-maximized .flag-badge {
