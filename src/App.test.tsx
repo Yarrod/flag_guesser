@@ -115,6 +115,28 @@ describe('App', () => {
     });
   });
 
+  it('syncs the app height css variable on render and resize', () => {
+    Object.defineProperty(window, 'innerHeight', {
+      configurable: true,
+      writable: true,
+      value: 812
+    });
+
+    render(<App />);
+
+    expect(document.documentElement.style.getPropertyValue('--app-height')).toBe('812px');
+
+    Object.defineProperty(window, 'innerHeight', {
+      configurable: true,
+      writable: true,
+      value: 430
+    });
+
+    fireEvent(window, new Event('resize'));
+
+    expect(document.documentElement.style.getPropertyValue('--app-height')).toBe('430px');
+  });
+
   it('toggles pseudo fullscreen mode when the fullscreen api is unavailable', async () => {
     queueRounds(firstRound);
     const user = userEvent.setup();

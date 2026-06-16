@@ -191,6 +191,28 @@ export default function App() {
   }, [theme]);
 
   useEffect(() => {
+    const root = document.documentElement;
+    const viewport = window.visualViewport;
+
+    const syncViewportHeight = () => {
+      const viewportHeight = viewport?.height ?? window.innerHeight;
+      root.style.setProperty('--app-height', `${Math.round(viewportHeight)}px`);
+    };
+
+    syncViewportHeight();
+    window.addEventListener('resize', syncViewportHeight);
+    window.addEventListener('orientationchange', syncViewportHeight);
+    viewport?.addEventListener('resize', syncViewportHeight);
+
+    return () => {
+      window.removeEventListener('resize', syncViewportHeight);
+      window.removeEventListener('orientationchange', syncViewportHeight);
+      viewport?.removeEventListener('resize', syncViewportHeight);
+      root.style.removeProperty('--app-height');
+    };
+  }, []);
+
+  useEffect(() => {
     const onFullscreenChange = () => {
       const hasFullscreen = Boolean(document.fullscreenElement);
       setIsFullscreen(hasFullscreen);
