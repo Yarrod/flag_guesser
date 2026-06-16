@@ -164,6 +164,7 @@ export default function App() {
   const [isFullscreen, setIsFullscreen] = useState(Boolean(document.fullscreenElement));
   const [isPseudoMaximized, setIsPseudoMaximized] = useState(false);
 
+  const gameShellRef = useRef<HTMLElement | null>(null);
   const buttonRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const nextRoundTimer = useRef<number | null>(null);
   const selectionLockRef = useRef(false);
@@ -344,6 +345,11 @@ export default function App() {
   }, [bumpFlow, clearNextRoundTimer]);
 
   const toggleMaximize = useCallback(async () => {
+    if (isPseudoMaximized) {
+      setIsPseudoMaximized(false);
+      return;
+    }
+
     if (canFullscreen && !prefersPseudoFullscreen) {
       try {
         if (document.fullscreenElement) {
@@ -351,15 +357,19 @@ export default function App() {
           return;
         }
 
-        await document.documentElement.requestFullscreen();
-        return;
+        const fullscreenTarget = gameShellRef.current ?? document.documentElement;
+        await fullscreenTarget.requestFullscreen();
+
+        if (document.fullscreenElement) {
+          return;
+        }
       } catch {
         // Fall through to pseudo-maximize mode.
       }
     }
 
-    setIsPseudoMaximized((value) => !value);
-  }, [canFullscreen, prefersPseudoFullscreen]);
+    setIsPseudoMaximized(true);
+  }, [canFullscreen, isPseudoMaximized, prefersPseudoFullscreen]);
 
   const playCurrentCountryName = useCallback(() => {
     if (!round) {
@@ -614,7 +624,7 @@ export default function App() {
   const choicesGridClassName = ['choices-grid', mobileGridClassName].filter(Boolean).join(' ');
 
   return (
-    <main className={`game-shell ${isMaximized ? 'is-maximized' : ''}`}>
+    <main ref={gameShellRef} className={`game-shell ${isMaximized ? 'is-maximized' : ''}`}>
       <header className="top-bar">
         <div className="top-left">
           <h1>{t.title}</h1>

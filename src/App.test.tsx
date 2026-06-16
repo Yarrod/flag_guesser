@@ -172,6 +172,26 @@ describe('App', () => {
     expect(container.querySelector('.game-shell')).not.toHaveClass('is-maximized');
   });
 
+  it('falls back to pseudo fullscreen when native fullscreen resolves without entering', async () => {
+    Object.defineProperty(document, 'fullscreenEnabled', {
+      configurable: true,
+      writable: true,
+      value: true
+    });
+    const requestFullscreen = vi.spyOn(Element.prototype, 'requestFullscreen').mockResolvedValue(undefined);
+
+    queueRounds(firstRound);
+    const user = userEvent.setup();
+    const { container } = render(<App />);
+
+    await startEnglishGame(user);
+    await user.click(screen.getByRole('button', { name: 'Maximize' }));
+
+    expect(requestFullscreen).toHaveBeenCalledTimes(1);
+    expect(document.body).toHaveClass('app-maximized');
+    expect(container.querySelector('.game-shell')).toHaveClass('is-maximized');
+  });
+
   it('uses pseudo fullscreen on iPad Chrome even when native fullscreen appears available', async () => {
     Object.defineProperty(window.navigator, 'userAgent', {
       configurable: true,
