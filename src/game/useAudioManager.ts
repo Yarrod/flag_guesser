@@ -49,8 +49,9 @@ export function useAudioManager(initialSources: string[] = []) {
   }, [initialSources, prepare]);
 
   useEffect(() => {
+    const map = audioMapRef.current;
+
     return () => {
-      const map = audioMapRef.current;
       map.forEach((audio) => {
         audio.pause();
         audio.src = '';
