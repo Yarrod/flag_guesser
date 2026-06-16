@@ -104,9 +104,12 @@
 
 .game-shell.is-maximized {
   position: fixed;
-  inset: 0;
+  top: var(--app-top, 0px);
+  left: var(--app-left, 0px);
+  right: auto;
+  bottom: auto;
   z-index: 50;
-  width: 100%;
+  width: var(--app-width, 100vw);
   max-width: none;
   min-height: var(--app-height, 100dvh);
   height: var(--app-height, 100dvh);

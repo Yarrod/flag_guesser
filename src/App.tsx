@@ -134,6 +134,14 @@ function getSystemTheme(): Theme {
   return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 }
 
+function shouldPreferPseudoFullscreen(): boolean {
+  const userAgent = navigator.userAgent;
+  const isMobileApple = /iPad|iPhone|iPod/.test(userAgent);
+  const isTouchMac = /Macintosh/.test(userAgent) && navigator.maxTouchPoints > 1;
+
+  return isMobileApple || isTouchMac;
+}
+
 export default function App() {
   const [isInMenu, setIsInMenu] = useState(true);
   const [language, setLanguage] = useState<Language>('cs');
@@ -149,7 +157,10 @@ export default function App() {
   const [isInputLocked, setIsInputLocked] = useState(false);
   const [answerState, setAnswerState] = useState<AnswerState>({ selectedId: null, wasCorrect: null });
 
-  const [canFullscreen, setCanFullscreen] = useState(Boolean(document.fullscreenEnabled));
+  const [prefersPseudoFullscreen] = useState(shouldPreferPseudoFullscreen);
+  const [canFullscreen, setCanFullscreen] = useState(
+    () => Boolean(document.fullscreenEnabled) && !prefersPseudoFullscreen
+  );
   const [isFullscreen, setIsFullscreen] = useState(Boolean(document.fullscreenElement));
   const [isPseudoMaximized, setIsPseudoMaximized] = useState(false);
 
@@ -196,7 +207,14 @@ export default function App() {
 
     const syncViewportHeight = () => {
       const viewportHeight = viewport?.height ?? window.innerHeight;
-      root.style.setProperty('--app-height', `${Math.round(viewportHeight)}px`);
+      const viewportWidth = viewport?.width ?? window.innerWidth;
+      const viewportTop = viewport?.offsetTop ?? 0;
+      const viewportLeft = viewport?.offsetLeft ?? 0;
+
+      root.style.setProperty('--app-height', Math.round(viewportHeight) + 'px');
+      root.style.setProperty('--app-width', Math.round(viewportWidth) + 'px');
+      root.style.setProperty('--app-top', Math.round(viewportTop) + 'px');
+      root.style.setProperty('--app-left', Math.round(viewportLeft) + 'px');
     };
 
     syncViewportHeight();
@@ -209,6 +227,9 @@ export default function App() {
       window.removeEventListener('orientationchange', syncViewportHeight);
       viewport?.removeEventListener('resize', syncViewportHeight);
       root.style.removeProperty('--app-height');
+      root.style.removeProperty('--app-width');
+      root.style.removeProperty('--app-top');
+      root.style.removeProperty('--app-left');
     };
   }, []);
 
@@ -216,7 +237,7 @@ export default function App() {
     const onFullscreenChange = () => {
       const hasFullscreen = Boolean(document.fullscreenElement);
       setIsFullscreen(hasFullscreen);
-      setCanFullscreen(Boolean(document.fullscreenEnabled));
+      setCanFullscreen(Boolean(document.fullscreenEnabled) && !prefersPseudoFullscreen);
 
       if (hasFullscreen) {
         setIsPseudoMaximized(false);
@@ -226,7 +247,7 @@ export default function App() {
     onFullscreenChange();
     document.addEventListener('fullscreenchange', onFullscreenChange);
     return () => document.removeEventListener('fullscreenchange', onFullscreenChange);
-  }, []);
+  }, [prefersPseudoFullscreen]);
 
   useEffect(() => {
     let didUnlock = false;
@@ -323,7 +344,7 @@ export default function App() {
   }, [bumpFlow, clearNextRoundTimer]);
 
   const toggleMaximize = useCallback(async () => {
-    if (canFullscreen) {
+    if (canFullscreen && !prefersPseudoFullscreen) {
       try {
         if (document.fullscreenElement) {
           await document.exitFullscreen();
@@ -338,7 +359,7 @@ export default function App() {
     }
 
     setIsPseudoMaximized((value) => !value);
-  }, [canFullscreen]);
+  }, [canFullscreen, prefersPseudoFullscreen]);
 
   const playCurrentCountryName = useCallback(() => {
     if (!round) {

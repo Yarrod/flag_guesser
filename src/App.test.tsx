@@ -91,6 +91,14 @@ describe('App', () => {
   };
 
   beforeEach(() => {
+    Object.defineProperty(window.navigator, 'userAgent', {
+      configurable: true,
+      value: 'Mozilla/5.0 (jsdom)'
+    });
+    Object.defineProperty(window.navigator, 'maxTouchPoints', {
+      configurable: true,
+      value: 0
+    });
     audioManagerMocks.play.mockReset().mockResolvedValue(undefined);
     audioManagerMocks.playAndWait.mockReset().mockResolvedValue(undefined);
     audioManagerMocks.unlockAll.mockReset().mockResolvedValue(undefined);
@@ -121,10 +129,18 @@ describe('App', () => {
       writable: true,
       value: 812
     });
+    Object.defineProperty(window, 'innerWidth', {
+      configurable: true,
+      writable: true,
+      value: 1080
+    });
 
     render(<App />);
 
     expect(document.documentElement.style.getPropertyValue('--app-height')).toBe('812px');
+    expect(document.documentElement.style.getPropertyValue('--app-width')).toBe('1080px');
+    expect(document.documentElement.style.getPropertyValue('--app-top')).toBe('0px');
+    expect(document.documentElement.style.getPropertyValue('--app-left')).toBe('0px');
 
     Object.defineProperty(window, 'innerHeight', {
       configurable: true,
@@ -154,6 +170,34 @@ describe('App', () => {
 
     expect(document.body).not.toHaveClass('app-maximized');
     expect(container.querySelector('.game-shell')).not.toHaveClass('is-maximized');
+  });
+
+  it('uses pseudo fullscreen on iPad Chrome even when native fullscreen appears available', async () => {
+    Object.defineProperty(window.navigator, 'userAgent', {
+      configurable: true,
+      value: 'Mozilla/5.0 (iPad; CPU OS 17_0 like Mac OS X) AppleWebKit/605.1.15 CriOS/120.0.0.0 Mobile/15E148 Safari/604.1'
+    });
+    Object.defineProperty(window.navigator, 'maxTouchPoints', {
+      configurable: true,
+      value: 5
+    });
+    Object.defineProperty(document, 'fullscreenEnabled', {
+      configurable: true,
+      writable: true,
+      value: true
+    });
+    const requestFullscreen = vi.spyOn(Element.prototype, 'requestFullscreen');
+
+    queueRounds(firstRound);
+    const user = userEvent.setup();
+    const { container } = render(<App />);
+
+    await startEnglishGame(user);
+    await user.click(screen.getByRole('button', { name: 'Maximize' }));
+
+    expect(requestFullscreen).not.toHaveBeenCalled();
+    expect(document.body).toHaveClass('app-maximized');
+    expect(container.querySelector('.game-shell')).toHaveClass('is-maximized');
   });
 
   it('uses the compact mobile grid class for six-choice rounds', async () => {
