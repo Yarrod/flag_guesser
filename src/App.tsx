@@ -562,9 +562,13 @@ export default function App() {
   const selectedName = answerState.selectedId ? getCountryName(answerState.selectedId) : '';
   const correctName = getCountryName(round.correct.id);
   const gridStyle = { '--grid-columns': String(activeGrid.columns) } as CSSProperties;
-  const choicesGridClassName = ['choices-grid', activeGrid.choices > 3 ? 'choices-grid--compact-mobile' : '']
-    .filter(Boolean)
-    .join(' ');
+  const mobileGridClassName =
+    activeGrid.choices >= 9
+      ? 'choices-grid--mobile-dense'
+      : activeGrid.choices >= 6
+        ? 'choices-grid--mobile-compact'
+        : '';
+  const choicesGridClassName = ['choices-grid', mobileGridClassName].filter(Boolean).join(' ');
 
   return (
     <main className={`game-shell ${isMaximized ? 'is-maximized' : ''}`}>

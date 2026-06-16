@@ -435,7 +435,12 @@
   }
 
   .game-shell.is-maximized {
-    overflow-y: auto;
+    min-height: 100svh;
+    height: 100svh;
+    height: 100dvh;
+    padding: 0.55rem 0.6rem 0.7rem;
+    gap: 0.45rem;
+    overflow: hidden;
   }
 
   .menu-language-options,
@@ -444,28 +449,95 @@
     grid-template-columns: 1fr;
   }
 
-  .choices-grid--compact-mobile {
+  .choices-grid--mobile-compact {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .game-shell.is-maximized .choices-grid {
-    height: auto;
-    align-content: start;
-    grid-auto-rows: auto;
+  .choices-grid--mobile-dense {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.5rem;
   }
 
   .flag-card {
     min-height: 23vh;
   }
 
+  .game-shell.is-maximized .top-left {
+    gap: 0.35rem;
+  }
+
+  .game-shell.is-maximized .top-left h1 {
+    font-size: clamp(1.15rem, 5vw, 1.5rem);
+  }
+
+  .game-shell.is-maximized .header-actions {
+    gap: 0.35rem;
+  }
+
+  .game-shell.is-maximized .toggle-button,
+  .game-shell.is-maximized .menu-back-button,
+  .game-shell.is-maximized .score-item {
+    font-size: 0.88rem;
+  }
+
+  .game-shell.is-maximized .toggle-button,
+  .game-shell.is-maximized .menu-back-button {
+    min-height: 2.1rem;
+    padding: 0.34rem 0.65rem;
+  }
+
+  .game-shell.is-maximized .score-board {
+    gap: 0.4rem;
+    flex-wrap: wrap;
+  }
+
+  .game-shell.is-maximized .replay-button {
+    min-height: 2.45rem;
+    min-width: 9rem;
+    padding: 0.5rem 1rem;
+    font-size: 0.92rem;
+  }
+
+  .game-shell.is-maximized .feedback {
+    min-height: 1.45rem;
+  }
+
+  .game-shell.is-maximized .feedback p {
+    font-size: clamp(0.9rem, 3.3vw, 1.05rem);
+  }
+
+  .game-shell.is-maximized .choices-grid {
+    height: 100%;
+    align-content: stretch;
+    grid-auto-rows: minmax(0, 1fr);
+    gap: 0.45rem;
+  }
+
+  .game-shell.is-maximized .choices-grid--mobile-dense {
+    gap: 0.35rem;
+  }
+
   .game-shell.is-maximized .flag-card {
-    height: auto;
-    min-height: 23vh;
+    height: 100%;
+    min-height: 0;
+    padding: 0.25rem;
+  }
+
+  .game-shell.is-maximized .choices-grid--mobile-dense .flag-card {
+    padding: 0.18rem;
   }
 
   .game-shell.is-maximized .flag-frame {
-    height: auto;
-    aspect-ratio: 4 / 3;
+    height: 100%;
+    min-height: 0;
+    aspect-ratio: auto;
+  }
+
+  .game-shell.is-maximized .flag-badge {
+    top: 0.35rem;
+    left: 0.35rem;
+    padding: 0.16rem 0.42rem;
+    font-size: 0.66rem;
   }
 
   .top-bar {

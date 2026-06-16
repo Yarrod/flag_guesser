@@ -66,6 +66,9 @@ describe('App', () => {
   const austria = getFlag('at');
   const netherlands = getFlag('nl');
   const sweden = getFlag('se');
+  const poland = getFlag('pl');
+  const norway = getFlag('no');
+  const denmark = getFlag('dk');
 
   const firstRound: Round = {
     correct: france,
@@ -80,6 +83,11 @@ describe('App', () => {
   const compactRound: Round = {
     correct: france,
     choices: [france, germany, italy, austria, netherlands, sweden]
+  };
+
+  const denseRound: Round = {
+    correct: france,
+    choices: [france, germany, italy, austria, netherlands, sweden, poland, norway, denmark]
   };
 
   beforeEach(() => {
@@ -126,7 +134,7 @@ describe('App', () => {
     expect(container.querySelector('.game-shell')).not.toHaveClass('is-maximized');
   });
 
-  it('uses the compact mobile grid class for larger rounds', async () => {
+  it('uses the compact mobile grid class for six-choice rounds', async () => {
     queueRounds(compactRound);
     const user = userEvent.setup();
     const { container } = render(<App />);
@@ -134,8 +142,20 @@ describe('App', () => {
     await user.click(screen.getByRole('button', { name: 'English' }));
     await user.click(screen.getByRole('button', { name: '6' }));
 
-    expect(container.querySelector('.choices-grid')).toHaveClass('choices-grid--compact-mobile');
+    expect(container.querySelector('.choices-grid')).toHaveClass('choices-grid--mobile-compact');
     expect(screen.getAllByRole('button', { name: /^Flag:/ })).toHaveLength(6);
+  });
+
+  it('uses the dense mobile grid class for nine-choice rounds', async () => {
+    queueRounds(denseRound);
+    const user = userEvent.setup();
+    const { container } = render(<App />);
+
+    await user.click(screen.getByRole('button', { name: 'English' }));
+    await user.click(screen.getByRole('button', { name: '9' }));
+
+    expect(container.querySelector('.choices-grid')).toHaveClass('choices-grid--mobile-dense');
+    expect(screen.getAllByRole('button', { name: /^Flag:/ })).toHaveLength(9);
   });
 
   it('increments the score and advances after a correct answer', async () => {
