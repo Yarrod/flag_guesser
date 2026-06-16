@@ -293,6 +293,7 @@
 }
 
 .flag-image {
+  display: block;
   object-fit: contain;
   object-position: center;
   user-select: none;
@@ -527,9 +528,24 @@
   }
 
   .game-shell.is-maximized .flag-frame {
+    width: 100%;
     height: 100%;
     min-height: 0;
     aspect-ratio: auto;
+  }
+
+  .game-shell.is-maximized .flag-image,
+  .game-shell.is-maximized .flag-fallback {
+    display: block;
+    width: 100%;
+    height: 100%;
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+  }
+
+  .game-shell.is-maximized .flag-image {
+    padding: 0.1rem;
   }
 
   .game-shell.is-maximized .flag-badge {
@@ -544,7 +560,8 @@
   }
 }
 
-@media (max-width: 900px) and (orientation: landscape) {
+@media (max-width: 900px) and (orientation: landscape),
+  (max-height: 520px) and (orientation: landscape) and (pointer: coarse) {
   .game-shell {
     grid-template-columns: minmax(170px, 32vw) minmax(0, 1fr);
     grid-template-rows: auto auto minmax(0, 1fr);
@@ -566,10 +583,6 @@
     gap: 0.3rem;
   }
 
-  .choices-grid--mobile-compact {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
   .controls {
     grid-column: 1;
     grid-row: 2;
@@ -587,6 +600,7 @@
     text-align: left;
   }
 
+
   .choices-grid {
     grid-column: 2;
     grid-row: 1 / span 3;
@@ -595,9 +609,18 @@
     grid-auto-rows: minmax(0, 1fr);
   }
 
+  .choices-grid--mobile-compact {
+    grid-template-rows: repeat(2, minmax(0, 1fr));
+  }
+
+  .choices-grid--mobile-dense {
+    grid-template-rows: repeat(3, minmax(0, 1fr));
+  }
+
   .flag-card {
     min-height: 0;
     height: 100%;
+    overflow: hidden;
   }
 
   .game-shell.is-maximized {
@@ -666,9 +689,24 @@
   }
 
   .game-shell.is-maximized .flag-frame {
+    width: 100%;
     height: 100%;
     min-height: 0;
     aspect-ratio: auto;
+  }
+
+  .game-shell.is-maximized .flag-image,
+  .game-shell.is-maximized .flag-fallback {
+    display: block;
+    width: 100%;
+    height: 100%;
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+  }
+
+  .game-shell.is-maximized .flag-image {
+    padding: 0.1rem;
   }
 
   .game-shell.is-maximized .flag-badge {
