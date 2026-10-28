@@ -2,6 +2,9 @@ import { useCallback, useEffect, useRef } from 'react';
 
 type AudioMap = Map<string, HTMLAudioElement>;
 
+// A stalled download or playback must not keep the game's answer controls locked.
+const PLAYBACK_TIMEOUT_MS = 10_000;
+
 function createAudio(src: string): HTMLAudioElement {
   const audio = new Audio(src);
   audio.preload = 'metadata';
@@ -10,6 +13,7 @@ function createAudio(src: string): HTMLAudioElement {
 
 export function useAudioManager(initialSources: string[] = []) {
   const audioMapRef = useRef<AudioMap>(new Map());
+  const pendingPlaybackRef = useRef(new Set<() => void>());
 
   const getAudio = useCallback((src: string) => {
     const map = audioMapRef.current;
@@ -50,8 +54,10 @@ export function useAudioManager(initialSources: string[] = []) {
 
   useEffect(() => {
     const map = audioMapRef.current;
+    const pendingPlayback = pendingPlaybackRef.current;
 
     return () => {
+      pendingPlayback.forEach((finish) => finish());
       map.forEach((audio) => {
         audio.pause();
         audio.src = '';
@@ -88,35 +94,37 @@ export function useAudioManager(initialSources: string[] = []) {
         return;
       }
 
-      if (audio.readyState === 0) {
-        audio.load();
-      }
-
-      audio.currentTime = 0;
-
       await new Promise<void>((resolve) => {
-        const onEnded = () => {
-          cleanup();
+        const finish = () => {
+          window.clearTimeout(timeout);
+          audio.removeEventListener('ended', finish);
+          audio.removeEventListener('error', finish);
+          audio.removeEventListener('abort', finish);
+          audio.removeEventListener('pause', finish);
+          pendingPlaybackRef.current.delete(finish);
           resolve();
         };
 
-        const onError = () => {
-          cleanup();
-          resolve();
-        };
+        const timeout = window.setTimeout(() => {
+          finish();
+          audio.pause();
+        }, PLAYBACK_TIMEOUT_MS);
 
-        const cleanup = () => {
-          audio.removeEventListener('ended', onEnded);
-          audio.removeEventListener('error', onError);
-        };
+        audio.addEventListener('ended', finish);
+        audio.addEventListener('error', finish);
+        audio.addEventListener('abort', finish);
+        audio.addEventListener('pause', finish);
+        pendingPlaybackRef.current.add(finish);
 
-        audio.addEventListener('ended', onEnded);
-        audio.addEventListener('error', onError);
-
-        audio.play().catch(() => {
-          cleanup();
-          resolve();
-        });
+        try {
+          if (audio.readyState === 0) {
+            audio.load();
+          }
+          audio.currentTime = 0;
+          void audio.play().catch(finish);
+        } catch {
+          finish();
+        }
       });
     },
     [getAudio]
